@@ -575,7 +575,7 @@ async function leaveOnline(){try{if(room)await room.leave()}catch(e){}room=null;
 const HOST_HASH="1940521636c310cf07b5520f56bfa450c297e8b7cbec34c0637808c2e3b5b414";
 let sroom=null,sj={},sr={},mine=new Set(),sCode="",syncT=null,canEd=null;
 async function sha(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("fw-kc99:"+t.trim().toUpperCase()));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-async function unlockHost(){try{if(await sha($("hostCode").value)===HOST_HASH){data.host=true;saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");renderShow()}else{toast("Falscher Code");sfx("buh")}}catch(e){toast("Code-Prüfung nicht möglich")}}
+async function unlockHost(){try{if(await sha($("hostCode").value)===HOST_HASH){data.host=true;data.hostV=HOST_HASH.slice(0,8);saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");renderShow()}else{toast("Falscher Code");sfx("buh")}}catch(e){toast("Code-Prüfung nicht möglich")}}
 function pushSync(){if(!sroom||!data.host)return;const ids=Object.keys(sj).sort((a,b)=>sj[b].t-sj[a].t).slice(0,8);if(!ids.length)return;sroom.emit("sync",{j:ids.map(i=>[i,sj[i].name,sj[i].joke.slice(0,140)]),r:ids.filter(i=>i in sr).map(i=>[i,sr[i]])}).catch(()=>{})}
 async function joinShow(){
   const c=($("sCode").value||"kc99").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,12)||"kc99";
@@ -704,7 +704,7 @@ function finish(o){
   checkAch();saveData();updateUI();$("bMAgain").style.display="block";
   if(mroom)mroom.presence({st:"idle",pair:null})}
 async function leaveMatch(){clearInterval(mTick);try{if(mroom)await mroom.leave()}catch(e){}mroom=null;mHost=false;mSt="idle";mBox("mLobby");$("mMsg").textContent="";showScreen("home")}
-async function unlockHost2(){const ok=await sha($("mHostCode").value).catch(()=>"")===HOST_HASH;if(ok){data.host=true;saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");renderMatch()}else{toast("Falscher Code");sfx("buh")}}
+async function unlockHost2(){const ok=await sha($("mHostCode").value).catch(()=>"")===HOST_HASH;if(ok){data.host=true;data.hostV=HOST_HASH.slice(0,8);saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");renderMatch()}else{toast("Falscher Code");sfx("buh")}}
 // ===== Live-Show =====
 const L={r:null,host:false,code:"",st:null,me:"",dl:0,tick:null,sent:false,fx:{},bt:null,doneFx:0};
 const H={phase:"lobby",round:0,dur:60,end:0,subs:{}};
@@ -717,14 +717,14 @@ function hSendSoon(){clearTimeout(L.bt);L.bt=setTimeout(hSend,300)}
 function lMode(c){$("lJoinPart").style.display=c?"none":"block";$("lCreatePart").style.display=c?"block":"none";$("lMsg").textContent="";lRenderJoin()}
 function lRenderJoin(){$("lHostLock").style.display=data.host?"none":"block";if(!$("lName").value)$("lName").value=data.name||""}
 async function lUnlock(){let ok=false;try{ok=(await sha($("lHostCode").value))===HOST_HASH}catch(e){}
-  if(ok){data.host=true;saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");lRenderJoin()}else{toast("Falscher Code");sfx("buh")}}
+  if(ok){data.host=true;data.hostV=HOST_HASH.slice(0,8);saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");lRenderJoin()}else{toast("Falscher Code");sfx("buh")}}
 function lEnter(){$("lJoin").style.display="none";$("lRoom").style.display="block";clearInterval(L.tick);L.tick=setInterval(lTick,500);renderLive()}
 async function lCreate(){
   if(!window.FW){$("lMsg").textContent="Online-Räume sind gerade nicht verfügbar.";return}
   if(!data.host){const c=$("lHostCode").value.trim();if(!c){$("lMsg").textContent="Bitte zuerst den Host-Code eingeben.";$("lHostCode").focus();return}
     let ok=false;try{ok=(await sha(c))===HOST_HASH}catch(e){$("lMsg").textContent="Dein Browser kann den Code nicht prüfen. Öffne die Seite über https:// in Chrome oder Safari.";return}
     if(!ok){$("lMsg").textContent="Host-Code ist falsch. Achte auf Bindestriche: KC99-XXXX-XXXX-XXXX";sfx("buh");return}
-    data.host=true;saveData();lRenderJoin()}
+    data.host=true;data.hostV=HOST_HASH.slice(0,8);saveData();lRenderJoin()}
   data.name=lname();saveData();$("lMsg").textContent="Raum wird erstellt… (dauert ein paar Sekunden)";
   const al="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r=null,code="";
   let why="";$("bLCreate").disabled=true;
@@ -945,7 +945,7 @@ $("bMJoin").onclick=joinMatch;$("bMSolo").onclick=()=>{mroom=null;startQueue()};
 $("bMSend").onclick=()=>sendMatch(false);$("bMAgain").onclick=startQueue;$("bMLeave").onclick=leaveMatch;$("bMClose").onclick=leaveMatch;
 $("bMCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("mBig").textContent);toast("Code kopiert")}catch(e){toast($("mBig").textContent)}};
 async function unlockHost2(){let ok=false;try{ok=(await sha($("mHostCode").value))===HOST_HASH}catch(e){}
-  if(ok){window.__hc=$("mHostCode").value.trim();data.host=true;saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");renderMatch()}else{toast("Falscher Code");sfx("buh")}}
+  if(ok){window.__hc=$("mHostCode").value.trim();data.host=true;data.hostV=HOST_HASH.slice(0,8);saveData();toast("🎙️ Host-Modus freigeschaltet");sfx("win");renderMatch()}else{toast("Falscher Code");sfx("buh")}}
 $("bMCreate").onclick=async()=>{if(!window.__hc){const c=prompt("Host-Code eingeben:");if(!c)return;let ok=false;try{ok=(await sha(c))===HOST_HASH}catch(e){}if(!ok){toast("Falscher Code");return}window.__hc=c.trim()}createMatch()};
 $("bOnline").onclick=()=>{lMode(false);showScreen("live")};
 $("bCreateRoom").onclick=()=>{lMode(true);showScreen("live")};
@@ -964,6 +964,7 @@ $("voiceMode").onchange=e=>{data.voice=e.target.checked;saveData();if(data.voice
 $("fxMode").onchange=e=>{data.fx=e.target.checked;saveData()};
 $("clipHi").onchange=e=>addClips("hi",e.target.files);$("clipMid").onchange=e=>addClips("mid",e.target.files);$("clipLo").onchange=e=>addClips("lo",e.target.files);
 $("clipDel").onclick=delClips;loadClips();
+if(data.host&&data.hostV!==HOST_HASH.slice(0,8)){data.host=false;saveData()}
 updateUI();
 </script>
 </body>
